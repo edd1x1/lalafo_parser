@@ -1,0 +1,44 @@
+import json
+import requests
+from bs4 import BeautifulSoup
+
+
+def get_html(url, headers):
+    res = requests.get(url, headers=headers).text
+    return res
+
+
+def get_json(html):
+    soup = BeautifulSoup(html, "html.parser")
+    get_json_data = soup.find("script", {"id": "__NEXT_DATA__"})
+    json_data = json.loads(get_json_data.text)
+    json_items = json_data['props']['initialState']['listing']['listingFeed']['items']
+    return json_items
+
+
+def get_data(content):
+    paid = []
+    for items in content:
+        title_ads = items['title']
+        nums_of_room_ads = title_ads.partition(',')[0]
+        room_description_ads = items['description'].rstrip()
+        price_ads = items['price']
+        link_to_ads = 'https://lalafo.kg' + items['url']
+        paid.append({'Комнат': nums_of_room_ads, 'Описание': room_description_ads, 'Цена': price_ads, 'Ссылка': link_to_ads})
+    return paid
+
+
+def main():
+    headers = {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"}
+    page = 1
+    url = f"https://lalafo.kg/bishkek/kvartiry/arenda-kvartir/dolgosrochnaya-arenda-kvartir/property-host?currency=KGS&sort_by=newest&price[to]=30000&page={page}"
+    html = get_html(url, headers)
+    content = get_json(html)
+    data = get_data(content)
+    print(data)
+
+
+if __name__ == '__main__':
+    main()
