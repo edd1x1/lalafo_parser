@@ -1,0 +1,32 @@
+import time
+import requests
+from bs4 import BeautifulSoup
+from tabulate import tabulate
+import pandas as pd
+
+headers ={
+    'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36'
+}
+
+url = "https://lalafo.kg/bishkek/kvartiry/arenda-kvartir/dolgosrochnaya-arenda-kvartir/property-host?price[to]=30000&currency=KGS&sort_by=newest"
+cont = requests.get(url).text
+soup = BeautifulSoup(cont, "html.parser")
+df1 = pd.DataFrame(columns=['Описание','Цена','Ссылка'])
+paid = []
+usual = []
+
+ads = soup.findAll('div', {'class' : "main-feed__wrapper"})
+for j in ads:
+    nopay = [nopay.get("style") for nopay in j.find_all('span', {'class':'badgePaidFeature'})]
+    room_descrp =  [room_descrp.text.replace('\n', ' ') for room_descrp in j.find_all('span', {'class':'adTile-SEO-description'})]
+    price = [price.text for price in j.find_all('p', {'class':'adTile-price'})]
+    link_to_ads = [link_to_ads.get('href') for link_to_ads in j.find_all('a', {'class':'adTile-mainInfo-link'})]
+    df = {
+        "Описание" : room_descrp,
+        "Цена" : price,
+        "Ссылка" : link_to_ads,
+    }
+    if nopay in [df]:
+        continue
+
+    print(df)
